@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI活用業務 優先順位化ツール</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif;background:#f8f7f4;color:#1a1a18;font-size:15px;line-height:1.6}
+:root{
+  --bg-primary:#ffffff;--bg-secondary:#f1efe8;--bg-info:#e6f1fb;
+  --text-primary:#1a1a18;--text-secondary:#5f5e5a;--text-info:#0c447c;
+  --border-tertiary:rgba(26,26,24,0.15);--border-secondary:rgba(26,26,24,0.3);--border-info:#b5d4f4;
+  --radius-md:8px;--radius-lg:12px;
+}
+@media(prefers-color-scheme:dark){
+  body{background:#1a1a18;color:#e8e7e3}
+  :root{
+    --bg-primary:#2c2c2a;--bg-secondary:#222220;--bg-info:#042c53;
+    --text-primary:#e8e7e3;--text-secondary:#888780;--text-info:#85b7eb;
+    --border-tertiary:rgba(232,231,227,0.15);--border-secondary:rgba(232,231,227,0.3);--border-info:#0c447c;
+  }
+}
+.app{max-width:780px;margin:0 auto;padding:2rem 1.5rem 4rem}
+.app-title{font-size:22px;font-weight:500;color:var(--text-primary);margin-bottom:4px}
+.app-sub{font-size:13px;color:var(--text-secondary);margin-bottom:1.5rem}
+.progress-bar{display:flex;border-radius:var(--radius-md);overflow:hidden;border:0.5px solid var(--border-tertiary);margin-bottom:2rem}
+.ps{flex:1;padding:10px 6px;text-align:center;font-size:12px;color:var(--text-secondary);background:var(--bg-secondary);cursor:pointer;border-right:0.5px solid var(--border-tertiary);transition:background .2s}
+.ps:last-child{border-right:none}
+.ps.active{background:#185FA5;color:#E6F1FB;font-weight:500}
+.ps.done{background:#0F6E56;color:#E1F5EE}
+.sec{display:none}.sec.vis{display:block}
+h2{font-size:18px;font-weight:500;color:var(--text-primary);margin-bottom:.4rem}
+.sub{font-size:13px;color:var(--text-secondary);margin-bottom:1.5rem;line-height:1.5}
+.card{background:var(--bg-primary);border:0.5px solid var(--border-tertiary);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1rem}
+.fl{font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;display:block}
+.fl .req{color:#E24B4A}
+input[type=text]{width:100%;font-size:14px;padding:8px 10px;border:0.5px solid var(--border-secondary);border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-primary);outline:none}
+input[type=text]:focus{border-color:#185FA5;box-shadow:0 0 0 2px rgba(24,95,165,0.15)}
+textarea{width:100%;font-size:14px;padding:8px 10px;border:0.5px solid var(--border-secondary);border-radius:var(--radius-md);background:var(--bg-primary);color:var(--text-primary);resize:vertical;min-height:70px;outline:none;font-family:inherit}
+textarea:focus{border-color:#185FA5;box-shadow:0 0 0 2px rgba(24,95,165,0.15)}
+input[type=range]{width:100%;accent-color:#185FA5;cursor:pointer}
+.cbg{display:flex;flex-direction:column;gap:7px;margin-top:6px}
+.cbi{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border:0.5px solid var(--border-tertiary);border-radius:var(--radius-md);cursor:pointer;transition:background .15s}
+.cbi:hover{background:var(--bg-secondary)}
+.cbi input[type=checkbox]{margin-top:2px;flex-shrink:0;width:14px;height:14px;cursor:pointer;accent-color:#185FA5}
+.cbi label{font-size:13px;color:var(--text-primary);cursor:pointer;line-height:1.4}
+.cbi label span{font-size:12px;color:var(--text-secondary);display:block}
+.cbi.chk{background:var(--bg-info);border-color:var(--border-info)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;font-size:14px;border-radius:var(--radius-md);cursor:pointer;font-family:inherit;transition:all .15s;text-decoration:none}
+.btn-p{background:#185FA5;color:#fff;border:none}.btn-p:hover{background:#0C447C}
+.btn-s{background:transparent;color:var(--text-primary);border:0.5px solid var(--border-secondary)}.btn-s:hover{background:var(--bg-secondary)}
+.btn-d{background:transparent;color:#A32D2D;border:0.5px solid #F09595;font-size:12px;padding:5px 10px}.btn-d:hover{background:#FCEBEB}
+.btn-e{background:transparent;color:#185FA5;border:0.5px solid #B5D4F4;font-size:12px;padding:5px 10px}.btn-e:hover{background:#E6F1FB}
+.sbadge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500}
+.bh{background:#EAF3DE;color:#3B6D11}.bm{background:#FAEEDA;color:#854F0B}.bl{background:#FCEBEB;color:#A32D2D}
+.divider{border:none;border-top:0.5px solid var(--border-tertiary);margin:1.1rem 0}
+.row{display:flex;gap:12px}.row>*{flex:1}
+.acts{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem}
+.blist{list-style:none}
+.bi{border:0.5px solid var(--border-tertiary);border-radius:var(--radius-lg);margin-bottom:8px;background:var(--bg-primary);overflow:hidden}
+.bi-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;transition:background .15s}
+.bi-header:hover{background:var(--bg-secondary)}
+.bi-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.bi-name{font-size:14px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bi-meta{font-size:12px;color:var(--text-secondary);margin-top:1px}
+.bi-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.bi-icon{font-size:16px;color:var(--text-secondary);transition:transform .2s;margin-left:4px;display:inline-block}
+.bi-icon.open{transform:rotate(180deg)}
+.bi-detail{display:none;border-top:0.5px solid var(--border-tertiary);padding:1rem 1.25rem;background:var(--bg-secondary)}
+.bi-detail.open{display:block}
+.edit-form{background:var(--bg-primary);border:0.5px solid var(--border-tertiary);border-radius:var(--radius-md);padding:1rem;margin-top:8px}
+.detail-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.detail-field .lbl{font-size:12px;color:var(--text-secondary);margin-bottom:3px}
+.detail-field .val{font-size:13px;color:var(--text-primary);font-weight:500}
+.tag-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.tag{display:inline-block;padding:2px 8px;background:var(--bg-secondary);border:0.5px solid var(--border-tertiary);border-radius:20px;font-size:11px;color:var(--text-secondary)}
+.empty{text-align:center;padding:2rem;color:var(--text-secondary);font-size:13px;border:0.5px dashed var(--border-tertiary);border-radius:var(--radius-lg)}
+.alert-i{padding:10px 14px;border-radius:var(--radius-md);font-size:13px;margin-bottom:1rem;background:#E6F1FB;color:#0C447C;border:0.5px solid #B5D4F4}
+.tab-bar{display:flex;border-bottom:0.5px solid var(--border-tertiary);margin-bottom:1.5rem}
+.tab{padding:8px 16px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-secondary)}
+.tab.act{border-bottom-color:#185FA5;color:#185FA5;font-weight:500}
+.step-hd{display:flex;align-items:center;gap:10px;margin-bottom:.5rem}
+.step-n{width:28px;height:28px;border-radius:50%;background:#185FA5;color:#fff;font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.upload-zone{border:1.5px dashed var(--border-secondary);border-radius:var(--radius-lg);padding:1.5rem;text-align:center;cursor:pointer;transition:background .2s;margin-bottom:1rem}
+.upload-zone:hover,.upload-zone.drag{background:var(--bg-info)}
+.upload-zone p{font-size:13px;color:var(--text-secondary);margin-top:6px}
+.psi-block{margin-bottom:1.5rem}
+.psi-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.psi-label{font-size:14px;font-weight:500;color:var(--text-primary)}
+.psi-meta{font-size:12px;color:var(--text-secondary)}
+.gauge-wrap{position:relative;height:36px;background:var(--bg-secondary);border-radius:var(--radius-md);overflow:hidden;border:0.5px solid var(--border-tertiary)}
+.gauge-fill{height:100%;border-radius:var(--radius-md);transition:width .2s,background .2s}
+.gauge-val{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;font-weight:500;color:var(--text-primary)}
+.gauge-raw{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-secondary)}
+.psi-slider{width:100%;margin-top:6px;accent-color:#185FA5}
+.psi-ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-top:3px;padding:0 2px}
+.lv-dots{display:flex;gap:4px;margin-top:6px}
+.lv-dot{width:28px;height:8px;border-radius:4px;background:var(--border-tertiary);transition:background .2s}
+.q-wrap{position:relative;width:100%;padding-top:85%}
+canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+.rtbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+.rtbl th{background:var(--bg-secondary);padding:8px 10px;font-weight:500;font-size:12px;color:var(--text-secondary);text-align:left;border-bottom:0.5px solid var(--border-tertiary)}
+.rtbl td{padding:9px 10px;border-bottom:0.5px solid var(--border-tertiary);vertical-align:top;word-break:break-all}
+.qtag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.tqw{background:#EAF3DE;color:#3B6D11}.tst{background:#E6F1FB;color:#185FA5}.tpt{background:#FAEEDA;color:#854F0B}.tlp{background:#F1EFE8;color:#5F5E5A}
+.ai-hint{font-size:11px;color:var(--text-secondary);line-height:1.5;margin-top:4px;border-left:2px solid var(--border-secondary);padding-left:6px}
+.legend-dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="app-title">AI活用業務 優先順位化ツール</div>
+  <p class="app-sub">PSIフレームワーク — ユースケース特定・優先順位付け</p>
+
+  <div class="progress-bar">
+    <div class="ps active" onclick="gS(0)">Step 1<br><span style="font-size:10px">業務洗い出し</span></div>
+    <div class="ps" onclick="gS(1)">Step 2<br><span style="font-size:10px">PSI評価</span></div>
+    <div class="ps" onclick="gS(2)">Step 3<br><span style="font-size:10px">4象限分析</span></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="sec vis" id="s0">
+    <div class="step-hd"><div class="step-n">1</div><h2>対象業務の洗い出し・スクリーニング</h2></div>
+    <p class="sub">業務を登録します。登録後は各業務を展開して内容の確認・修正ができます。</p>
+
+    <div class="card">
+      <div style="display:flex;gap:0;margin-bottom:.8rem">
+        <div class="tab act" id="tab-manual" onclick="switchInputTab('manual')" style="padding:6px 14px">手入力</div>
+        <div class="tab" id="tab-excel" onclick="switchInputTab('excel')" style="padding:6px 14px">Excelアップロード</div>
+      </div>
+
+      <div id="pane-manual">
+        <div class="row">
+          <div><label class="fl">業務名<span class="req">*</span></label><input type="text" id="bn" placeholder="例: 議事録要約・配布"></div>
+          <div><label class="fl">担当部門</label><input type="text" id="bd" placeholder="例: 総務部"></div>
+        </div>
+        <div style="margin-top:10px"><label class="fl">主な作業内容</label><textarea id="bx" placeholder="例: 会議録音を文字起こしし重要点を抽出してメール配布する"></textarea></div>
+        <div class="divider"></div>
+        <label class="fl">Q1. 面倒・嫌だと感じる作業<span class="req">*</span> <span style="font-weight:400;color:var(--text-secondary)">（複数可）</span></label>
+        <div class="cbg" id="q1g">
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="4" data-lb="要約・加工"><label>要約・加工<span>議事録・報告書から重要点を抽出し定型フォーマットに落とす</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="4" data-lb="文章生成"><label>文章生成<span>メール回答・報告書・提案書の骨子を毎回作成する</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="4" data-lb="翻訳・多言語対応"><label>翻訳・多言語対応<span>文書翻訳や文脈調整</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="3" data-lb="内容チェック・判定"><label>内容チェック・判定<span>申請書が社内ルールや契約に合致しているかOK/NG判断</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="3" data-lb="データ検索・特定"><label>データ検索・特定<span>膨大なフォルダや過去チャットから知見・ファイルを探す</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="3" data-lb="属人的な相談対応"><label>属人的な相談対応<span>定型的な質問に経験・記憶を頼りに回答する</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="1" data-lb="情報収集・突き合わせ"><label>情報収集・突き合わせ<span>複数ファイル・システムを見比べ差分・整合性を確認</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="1" data-lb="単純転記・打ち込み"><label>単純転記・打ち込み<span>システム間のデータ移し替え作業</span></label></div>
+        </div>
+        <div style="margin-top:12px">
+          <label class="fl">Q2. インプットに使うデータ<span class="req">*</span> <span style="font-weight:400;color:var(--text-secondary)">（複数可）</span></label>
+          <div class="cbg" id="q2g">
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="3" data-lb="テキスト文書"><label>テキスト文書<span>メール・チャット履歴・議事録</span></label></div>
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="3" data-lb="非構造化ファイル"><label>非構造化ファイル<span>PDF規程集・マニュアル・契約書・仕様書</span></label></div>
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="3" data-lb="音声データ"><label>音声データ<span>会議録音・コールセンター通話記録</span></label></div>
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="2" data-lb="画像・スキャン文書"><label>画像・スキャン文書<span>現場写真・図面・スキャン帳票</span></label></div>
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="2" data-lb="暗黙知"><label>暗黙知<span>自分の経験・勘・ベテラン社員へのヒアリング</span></label></div>
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="1" data-lb="構造化データ"><label>構造化データ<span>DB・Excel・CSV</span></label></div>
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="1" data-lb="社外情報"><label>社外情報<span>ニュース・官公庁統計・競合サイト</span></label></div>
+          </div>
+        </div>
+        <div id="spv" style="display:none;margin-top:12px;padding:10px 14px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border-tertiary)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px;color:var(--text-secondary)">AI適合性スコア（プレビュー）</span>
+            <span id="spv-n" style="font-size:18px;font-weight:500"></span>
+          </div>
+          <div id="spv-l" style="font-size:12px;margin-top:4px"></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:12px">
+          <button class="btn btn-p" onclick="addB()">＋ 業務を追加</button>
+        </div>
+      </div>
+
+      <div id="pane-excel" style="display:none">
+        <div class="upload-zone" id="dropzone" onclick="document.getElementById('xlfile').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+          <div style="font-size:32px">📤</div>
+          <div style="font-size:14px;font-weight:500;color:var(--text-primary);margin-top:8px">Excelファイルをドロップ、またはクリックして選択</div>
+          <p>.xlsx / .csv 形式対応</p>
+          <input type="file" id="xlfile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(this.files[0])">
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:#185FA5;cursor:pointer;text-decoration:underline" onclick="downloadTemplate()">▼ テンプレートをダウンロード（CSV）</span>
+        </div>
+        <div style="margin-top:10px;padding:10px 14px;background:var(--bg-secondary);border-radius:var(--radius-md);font-size:12px;color:var(--text-secondary);line-height:1.6">
+          必須列: <strong style="color:var(--text-primary)">業務名, 部門, Q1スコア(1-4), Q2スコア合計</strong><br>
+          Q1スコア: 要約/生成/翻訳=4, チェック/検索/相談=3, 突き合わせ/転記=1<br>
+          Q2スコア: テキスト/非構造化/音声=各3点, 画像/暗黙知=各2点, 構造化/社外=各1点を合算
+        </div>
+        <div id="import-result" style="display:none;margin-top:10px;padding:10px 14px;border-radius:var(--radius-md);font-size:13px"></div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;font-weight:500;color:var(--text-secondary)">登録済み業務</span>
+      <span id="bcnt" style="font-size:12px;color:var(--text-secondary)">0件</span>
+    </div>
+    <ul class="blist" id="blist">
+      <li class="empty">まだ業務が登録されていません</li>
+    </ul>
+    <div class="acts"><div></div>
+      <button class="btn btn-p" onclick="gS(1)">Step 2へ進む →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="sec" id="s1">
+    <div class="step-hd"><div class="step-n">2</div><h2>PSI評価</h2></div>
+    <p class="sub">各業務の P・S・I を数値で入力します。ゲージとドットで現在のレベルをリアルタイム確認できます。</p>
+    <div id="psi-con"></div>
+    <div class="acts">
+      <button class="btn btn-s" onclick="gS(0)">← 戻る</button>
+      <button class="btn btn-p" onclick="gS(2)">Step 3へ進む →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="sec" id="s2">
+    <div class="step-hd"><div class="step-n">3</div><h2>4象限分析・優先順位の決定</h2></div>
+    <p class="sub">縦軸＝Pスコア（ビジネスインパクト）、横軸＝S×I（実現難易度）で各業務をマッピングします。</p>
+    <div class="tab-bar">
+      <div class="tab act" id="tb-c" onclick="swTab('chart')">4象限マップ</div>
+      <div class="tab" id="tb-t" onclick="swTab('table')">結果一覧</div>
+    </div>
+    <div id="pane-chart">
+      <div class="q-wrap"><canvas id="qc" role="img" aria-label="AI業務優先順位 4象限マップ"></canvas></div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:12px">
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#3B6D11"><span class="legend-dot" style="background:#EAF3DE;border:1.5px solid #639922"></span>Quick Win</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#185FA5"><span class="legend-dot" style="background:#E6F1FB;border:1.5px solid #378ADD"></span>Strategic</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#854F0B"><span class="legend-dot" style="background:#FAEEDA;border:1.5px solid #EF9F27"></span>Potential</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#5F5E5A"><span class="legend-dot" style="background:#F1EFE8;border:1.5px solid #B4B2A9"></span>Low Priority</span>
+      </div>
+    </div>
+    <div id="pane-table" style="display:none;overflow-x:auto">
+      <table class="rtbl"><thead><tr><th style="width:15%">業務名</th><th style="width:10%">部門</th><th style="width:8%">適合性</th><th style="width:5%;text-align:center">P</th><th style="width:5%;text-align:center">S</th><th style="width:5%;text-align:center">I</th><th style="width:12%">分類</th><th style="width:40%">AI活用の可能性</th></tr></thead>
+      <tbody id="rtbody"></tbody></table>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:1.5rem">
+      <div class="card" style="border-left:3px solid #639922;border-radius:0 var(--radius-lg) var(--radius-lg) 0"><div style="font-size:13px;font-weight:500;color:#3B6D11;margin-bottom:3px">⚡ Quick Win（左上）</div><div style="font-size:12px;color:var(--text-secondary)">標準ツールで即導入し成功体験を積み上げる</div></div>
+      <div class="card" style="border-left:3px solid #378ADD;border-radius:0 var(--radius-lg) var(--radius-lg) 0"><div style="font-size:13px;font-weight:500;color:#185FA5;margin-bottom:3px">🎯 Strategic（右上）</div><div style="font-size:12px;color:var(--text-secondary)">予算・リソースを集中投下し独自の知能資産を築く</div></div>
+      <div class="card" style="border-left:3px solid #EF9F27;border-radius:0 var(--radius-lg) var(--radius-lg) 0"><div style="font-size:13px;font-weight:500;color:#854F0B;margin-bottom:3px">🌱 Potential（左下）</div><div style="font-size:12px;color:var(--text-secondary)">技術進化やデータ蓄積を待ってから判断する</div></div>
+      <div class="card" style="border-left:3px solid #B4B2A9;border-radius:0 var(--radius-lg) var(--radius-lg) 0"><div style="font-size:13px;font-weight:500;color:#5F5E5A;margin-bottom:3px">⛔ Low Priority（右下）</div><div style="font-size:12px;color:var(--text-secondary)">無理にAIを当てはめず現行通りとする</div></div>
+    </div>
+    <div class="acts">
+      <button class="btn btn-s" onclick="gS(1)">← 戻る</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+let bizs=[], qChart=null;
+
+const Q1_OPTS=[
+  {val:4,lb:'要約・加工',desc:'議事録・報告書から重要点を抽出し定型フォーマットに落とす'},
+  {val:4,lb:'文章生成',desc:'メール回答・報告書・提案書の骨子を毎回作成する'},
+  {val:4,lb:'翻訳・多言語対応',desc:'文書翻訳や文脈調整'},
+  {val:3,lb:'内容チェック・判定',desc:'申請書が社内ルールや契約に合致しているかOK/NG判断'},
+  {val:3,lb:'データ検索・特定',desc:'膨大なフォルダや過去チャットから知見・ファイルを探す'},
+  {val:3,lb:'属人的な相談対応',desc:'定型的な質問に経験・記憶を頼りに回答する'},
+  {val:1,lb:'情報収集・突き合わせ',desc:'複数ファイル・システムを見比べ差分・整合性を確認'},
+  {val:1,lb:'単純転記・打ち込み',desc:'システム間のデータ移し替え作業'},
+];
+const Q2_OPTS=[
+  {val:3,lb:'テキスト文書',desc:'メール・チャット履歴・議事録'},
+  {val:3,lb:'非構造化ファイル',desc:'PDF規程集・マニュアル・契約書・仕様書'},
+  {val:3,lb:'音声データ',desc:'会議録音・コールセンター通話記録'},
+  {val:2,lb:'画像・スキャン文書',desc:'現場写真・図面・スキャン帳票'},
+  {val:2,lb:'暗黙知',desc:'自分の経験・勘・ベテラン社員へのヒアリング'},
+  {val:1,lb:'構造化データ',desc:'DB・Excel・CSV'},
+  {val:1,lb:'社外情報',desc:'ニュース・官公庁統計・競合サイト'},
+];
+const PSI_DEF={
+  p:{label:'P — 拘束時間',min:0,max:200,unit:'h/月',step:5,
+    bands:[{v:10,l:'10h以下',lv:1,c:'#97C459'},{v:40,l:'11〜40h',lv:2,c:'#EF9F27'},{v:80,l:'41〜80h',lv:3,c:'#EF9F27'},{v:160,l:'81〜160h',lv:4,c:'#E24B4A'},{v:200,l:'161h以上',lv:5,c:'#A32D2D'}]},
+  s:{label:'S — 属人性（教育日数）',min:0,max:30,unit:'日',step:1,
+    bands:[{v:1,l:'1日未満',lv:1,c:'#97C459'},{v:3,l:'1〜3日',lv:2,c:'#EF9F27'},{v:10,l:'4〜10日',lv:3,c:'#EF9F27'},{v:20,l:'11〜20日',lv:4,c:'#E24B4A'},{v:30,l:'21日以上',lv:5,c:'#A32D2D'}]},
+  i:{label:'I — 心理的負荷（ミス時工数）',min:0,max:50,unit:'h',step:1,
+    bands:[{v:1,l:'1h未満',lv:1,c:'#97C459'},{v:3,l:'1〜3h',lv:2,c:'#EF9F27'},{v:15,l:'4〜15h',lv:3,c:'#EF9F27'},{v:40,l:'16〜40h',lv:4,c:'#E24B4A'},{v:50,l:'41h以上',lv:5,c:'#A32D2D'}]},
+};
+
+function getLv(key,raw){const b=PSI_DEF[key].bands;for(let i=0;i<b.length;i++){if(raw<=b[i].v)return b[i].lv}return 5}
+function getColor(key,raw){const b=PSI_DEF[key].bands;for(let i=0;i<b.length;i++){if(raw<=b[i].v)return b[i].c}return b[b.length-1].c}
+function getRangeLabel(key,raw){const b=PSI_DEF[key].bands;for(let i=0;i<b.length;i++){if(raw<=b[i].v)return b[i].l}return b[b.length-1].l}
+
+function gS(n){
+  if(n===1&&bizs.filter(b=>b.fit!=='low').length===0){alert('Step 2に進むには高適合または中適合の業務を1件以上登録してください。');return}
+  document.querySelectorAll('.sec').forEach((s,i)=>s.classList.toggle('vis',i===n));
+  document.querySelectorAll('.ps').forEach((s,i)=>{s.classList.toggle('active',i===n);s.classList.toggle('done',i<n)});
+  if(n===1)renderPSI();
+  if(n===2)renderQ();
+}
+
+function switchInputTab(t){
+  document.getElementById('pane-manual').style.display=t==='manual'?'':'none';
+  document.getElementById('pane-excel').style.display=t==='excel'?'':'none';
+  document.getElementById('tab-manual').classList.toggle('act',t==='manual');
+  document.getElementById('tab-excel').classList.toggle('act',t==='excel');
+}
+
+function tc(item){const cb=item.querySelector('input');cb.checked=!cb.checked;item.classList.toggle('chk',cb.checked);updSPV()}
+
+function updSPV(){
+  const q1=[...document.querySelectorAll('#q1g input:checked')];
+  const q2=[...document.querySelectorAll('#q2g input:checked')];
+  const el=document.getElementById('spv');
+  if(!q1.length||!q2.length){el.style.display='none';return}
+  const mx=Math.max(...q1.map(c=>+c.value));
+  const sm=q2.reduce((s,c)=>s+ +c.value,0);
+  const sc=mx*sm;
+  el.style.display='block';
+  const nEl=document.getElementById('spv-n'),lEl=document.getElementById('spv-l');
+  nEl.textContent=sc+'点';
+  if(sc>=12){nEl.style.color='#3B6D11';lEl.innerHTML='<span style="color:#3B6D11;font-weight:500">高適合</span> — 最優先でPoC対象'}
+  else if(sc>=8){nEl.style.color='#BA7517';lEl.innerHTML='<span style="color:#BA7517;font-weight:500">中適合</span> — AI化可能'}
+  else{nEl.style.color='#A32D2D';lEl.innerHTML='<span style="color:#A32D2D;font-weight:500">低適合</span> — AI化の優先度は低い'}
+}
+
+function calcFit(q1mx,q2sm){const sc=q1mx*q2sm;return sc>=12?'high':sc>=8?'mid':'low'}
+function fitLabel(f){return f==='high'?'高適合':f==='mid'?'中適合':'低適合'}
+function fitBadge(f){return f==='high'?'bh':f==='mid'?'bm':'bl'}
+
+function addB(){
+  const name=document.getElementById('bn').value.trim();
+  const dept=document.getElementById('bd').value.trim();
+  const desc=document.getElementById('bx').value.trim();
+  const q1c=[...document.querySelectorAll('#q1g input:checked')];
+  const q2c=[...document.querySelectorAll('#q2g input:checked')];
+  if(!name){alert('業務名を入力してください');return}
+  if(!q1c.length){alert('Q1を1つ以上選択してください');return}
+  if(!q2c.length){alert('Q2を1つ以上選択してください');return}
+  const q1mx=Math.max(...q1c.map(c=>+c.value));
+  const q2sm=q2c.reduce((s,c)=>s+ +c.value,0);
+  const q1labels=q1c.map(c=>c.dataset.lb);
+  const q2labels=q2c.map(c=>c.dataset.lb);
+  const score=q1mx*q2sm, fit=calcFit(q1mx,q2sm);
+  bizs.push({id:Date.now(),name,dept,desc,q1mx,q2sm,q1labels,q2labels,score,fit,pRaw:40,sRaw:5,iRaw:5});
+  renderList();resetForm();
+}
+
+function resetForm(){
+  ['bn','bd','bx'].forEach(id=>document.getElementById(id).value='');
+  document.querySelectorAll('#q1g input,#q2g input').forEach(c=>c.checked=false);
+  document.querySelectorAll('#q1g .cbi,#q2g .cbi').forEach(i=>i.classList.remove('chk'));
+  document.getElementById('spv').style.display='none';
+}
+
+function removeB(id){if(!confirm('この業務を削除しますか？')){return}bizs=bizs.filter(b=>b.id!==id);renderList()}
+
+function toggleDetail(id){
+  const detail=document.getElementById('bd-'+id);
+  const icon=document.getElementById('bi-icon-'+id);
+  const isOpen=detail.classList.contains('open');
+  detail.classList.toggle('open',!isOpen);
+  if(icon)icon.classList.toggle('open',!isOpen);
+}
+
+function startEdit(id){
+  const b=bizs.find(x=>x.id===id);if(!b)return;
+  const container=document.getElementById('edit-form-'+id);
+  if(container.style.display==='block'){container.style.display='none';return}
+  const q1Html=Q1_OPTS.map(o=>{const chk=b.q1labels.includes(o.lb)?'checked':'';return`<div class="cbi ${chk?'chk':''}" onclick="tcEdit(this,${id})"><input type="checkbox" value="${o.val}" data-lb="${o.lb}" ${chk}><label>${o.lb}<span>${o.desc}</span></label></div>`}).join('');
+  const q2Html=Q2_OPTS.map(o=>{const chk=b.q2labels.includes(o.lb)?'checked':'';return`<div class="cbi ${chk?'chk':''}" onclick="tcEdit(this,${id})"><input type="checkbox" value="${o.val}" data-lb="${o.lb}" ${chk}><label>${o.lb}<span>${o.desc}</span></label></div>`}).join('');
+  container.innerHTML=`
+    <div class="edit-form">
+      <div class="row" style="margin-bottom:10px">
+        <div><label class="fl">業務名<span class="req">*</span></label><input type="text" id="en-${id}" value="${esc(b.name)}"></div>
+        <div><label class="fl">担当部門</label><input type="text" id="ed-${id}" value="${esc(b.dept)}"></div>
+      </div>
+      <div style="margin-bottom:10px"><label class="fl">主な作業内容</label><textarea id="ex-${id}">${esc(b.desc)}</textarea></div>
+      <div class="divider"></div>
+      <label class="fl">Q1. 面倒・嫌だと感じる作業<span class="req">*</span></label>
+      <div class="cbg" id="eq1-${id}">${q1Html}</div>
+      <div style="margin-top:10px"><label class="fl">Q2. インプットに使うデータ<span class="req">*</span></label>
+      <div class="cbg" id="eq2-${id}">${q2Html}</div></div>
+      <div id="edit-spv-${id}" style="display:none;margin-top:10px;padding:8px 12px;border-radius:var(--radius-md);background:var(--bg-secondary);border:0.5px solid var(--border-tertiary)">
+        <div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--text-secondary)">スコアプレビュー</span><span id="espv-n-${id}" style="font-size:16px;font-weight:500"></span></div>
+        <div id="espv-l-${id}" style="font-size:12px;margin-top:2px"></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn btn-s" style="font-size:13px;padding:6px 14px" onclick="cancelEdit(${id})">キャンセル</button>
+        <button class="btn btn-p" style="font-size:13px;padding:6px 14px" onclick="saveEdit(${id})">✓ 保存</button>
+      </div>
+    </div>`;
+  container.style.display='block';
+  updEditSPV(id);
+}
+
+function tcEdit(item,id){const cb=item.querySelector('input');cb.checked=!cb.checked;item.classList.toggle('chk',cb.checked);updEditSPV(id)}
+
+function updEditSPV(id){
+  const q1=[...document.querySelectorAll(`#eq1-${id} input:checked`)];
+  const q2=[...document.querySelectorAll(`#eq2-${id} input:checked`)];
+  const el=document.getElementById(`edit-spv-${id}`);
+  if(!q1.length||!q2.length){el.style.display='none';return}
+  const mx=Math.max(...q1.map(c=>+c.value));
+  const sm=q2.reduce((s,c)=>s+ +c.value,0);
+  const sc=mx*sm;
+  el.style.display='block';
+  const nEl=document.getElementById(`espv-n-${id}`),lEl=document.getElementById(`espv-l-${id}`);
+  nEl.textContent=sc+'点';
+  if(sc>=12){nEl.style.color='#3B6D11';lEl.innerHTML='<span style="color:#3B6D11;font-weight:500">高適合</span>'}
+  else if(sc>=8){nEl.style.color='#BA7517';lEl.innerHTML='<span style="color:#BA7517;font-weight:500">中適合</span>'}
+  else{nEl.style.color='#A32D2D';lEl.innerHTML='<span style="color:#A32D2D;font-weight:500">低適合</span>'}
+}
+
+function cancelEdit(id){const c=document.getElementById('edit-form-'+id);if(c)c.style.display='none'}
+
+function saveEdit(id){
+  const b=bizs.find(x=>x.id===id);if(!b)return;
+  const name=document.getElementById('en-'+id).value.trim();
+  const dept=document.getElementById('ed-'+id).value.trim();
+  const desc=document.getElementById('ex-'+id).value.trim();
+  const q1c=[...document.querySelectorAll(`#eq1-${id} input:checked`)];
+  const q2c=[...document.querySelectorAll(`#eq2-${id} input:checked`)];
+  if(!name){alert('業務名を入力してください');return}
+  if(!q1c.length){alert('Q1を1つ以上選択してください');return}
+  if(!q2c.length){alert('Q2を1つ以上選択してください');return}
+  const q1mx=Math.max(...q1c.map(c=>+c.value));
+  const q2sm=q2c.reduce((s,c)=>s+ +c.value,0);
+  b.name=name;b.dept=dept;b.desc=desc;
+  b.q1labels=q1c.map(c=>c.dataset.lb);
+  b.q2labels=q2c.map(c=>c.dataset.lb);
+  b.q1mx=q1mx;b.q2sm=q2sm;b.score=q1mx*q2sm;b.fit=calcFit(q1mx,q2sm);
+  renderList();
+  setTimeout(()=>{
+    const el=document.getElementById('bd-'+id);if(el)el.classList.add('open');
+    const ic=document.getElementById('bi-icon-'+id);if(ic)ic.classList.add('open');
+  },50);
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function renderList(){
+  const el=document.getElementById('blist');
+  document.getElementById('bcnt').textContent=bizs.length+'件';
+  if(!bizs.length){el.innerHTML='<li class="empty">まだ業務が登録されていません</li>';return}
+  el.innerHTML=bizs.map(b=>{
+    const q1tags=b.q1labels.map(l=>`<span class="tag">${l}</span>`).join('');
+    const q2tags=b.q2labels.map(l=>`<span class="tag">${l}</span>`).join('');
+    return`<li class="bi">
+      <div class="bi-header" onclick="toggleDetail(${b.id})">
+        <div class="bi-left"><div>
+          <div class="bi-name">${esc(b.name)}</div>
+          <div class="bi-meta">${b.dept||'—'} ・ 適合スコア ${b.score}点</div>
+        </div></div>
+        <div class="bi-actions">
+          <span class="sbadge ${fitBadge(b.fit)}">${fitLabel(b.fit)}</span>
+          <button class="btn btn-e" onclick="event.stopPropagation();startEdit(${b.id})">✎ 編集</button>
+          <button class="btn btn-d" onclick="event.stopPropagation();removeB(${b.id})">🗑</button>
+          <span class="bi-icon" id="bi-icon-${b.id}">▼</span>
+        </div>
+      </div>
+      <div class="bi-detail" id="bd-${b.id}">
+        <div class="detail-row">
+          <div class="detail-field"><div class="lbl">業務名</div><div class="val">${esc(b.name)}</div></div>
+          <div class="detail-field"><div class="lbl">担当部門</div><div class="val">${esc(b.dept)||'—'}</div></div>
+        </div>
+        ${b.desc?`<div class="detail-field" style="margin-bottom:10px"><div class="lbl">主な作業内容</div><div style="font-size:13px;line-height:1.5;color:var(--text-primary)">${esc(b.desc)}</div></div>`:''}
+        <div class="detail-row">
+          <div class="detail-field"><div class="lbl">Q1 選択項目</div><div class="tag-list">${q1tags||'—'}</div></div>
+          <div class="detail-field"><div class="lbl">Q2 選択項目</div><div class="tag-list">${q2tags||'—'}</div></div>
+        </div>
+        <div class="detail-row" style="margin-top:8px">
+          <div class="detail-field"><div class="lbl">Q1最大スコア</div><div class="val">${b.q1mx}点</div></div>
+          <div class="detail-field"><div class="lbl">Q2合計スコア</div><div class="val">${b.q2sm}点</div></div>
+        </div>
+        <div id="edit-form-${b.id}" style="display:none;margin-top:10px"></div>
+      </div>
+    </li>`;
+  }).join('');
+}
+
+function renderPSI(){
+  const eligible=bizs.filter(b=>b.fit!=='low');
+  const con=document.getElementById('psi-con');
+  if(!eligible.length){con.innerHTML='<div class="alert-i">高適合・中適合の業務がありません。Step 1に戻って業務を追加してください。</div>';return}
+  con.innerHTML=eligible.map(b=>`
+  <div class="card" style="margin-bottom:1rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <div><div style="font-size:15px;font-weight:500;color:var(--text-primary)">${esc(b.name)}</div>
+      <div style="font-size:12px;color:var(--text-secondary)">${esc(b.dept)||''} ・ 適合スコア: ${b.score}点</div></div>
+      <span class="sbadge ${fitBadge(b.fit)}">${fitLabel(b.fit)}</span>
+    </div>
+    ${mkGauge(b,'p')}${mkGauge(b,'s')}${mkGauge(b,'i')}
+  </div>`).join('');
+}
+
+function mkGauge(b,key){
+  const d=PSI_DEF[key],raw=b[key+'Raw'];
+  const pct=Math.round((raw-d.min)/(d.max-d.min)*100);
+  const lv=getLv(key,raw),col=getColor(key,raw),rl=getRangeLabel(key,raw);
+  const dots=[1,2,3,4,5].map(i=>`<div class="lv-dot" style="background:${i<=lv?col:'#d3d1c7'}"></div>`).join('');
+  return`<div class="psi-block">
+    <div class="psi-hd"><span class="psi-label">${d.label}</span><span class="psi-meta" id="${key}-rl-${b.id}">${rl}</span></div>
+    <div class="gauge-wrap"><div class="gauge-fill" id="${key}-gf-${b.id}" style="width:${pct}%;background:${col}"></div>
+    <span class="gauge-raw" id="${key}-rv-${b.id}">${raw}${d.unit}</span>
+    <span class="gauge-val" id="${key}-lv-${b.id}">Lv.${lv}</span></div>
+    <input type="range" class="psi-slider" min="${d.min}" max="${d.max}" step="${d.step}" value="${raw}" oninput="updPSI(${b.id},'${key}',this.value)">
+    <div class="lv-dots" id="${key}-dots-${b.id}">${dots}</div>
+    <div class="psi-ticks"><span>${d.bands[0].l}</span><span>${d.bands[2].l}</span><span>${d.bands[4].l}</span></div>
+  </div>`;
+}
+
+function updPSI(id,key,val){
+  const b=bizs.find(x=>x.id===id);if(!b)return;
+  const raw=parseInt(val);b[key+'Raw']=raw;
+  const d=PSI_DEF[key],pct=Math.round((raw-d.min)/(d.max-d.min)*100);
+  const lv=getLv(key,raw),col=getColor(key,raw),rl=getRangeLabel(key,raw);
+  document.getElementById(`${key}-gf-${id}`).style.cssText=`width:${pct}%;background:${col}`;
+  document.getElementById(`${key}-rv-${id}`).textContent=raw+d.unit;
+  document.getElementById(`${key}-lv-${id}`).textContent='Lv.'+lv;
+  document.getElementById(`${key}-rl-${id}`).textContent=rl;
+  const dots=document.getElementById(`${key}-dots-${id}`);
+  if(dots)dots.innerHTML=[1,2,3,4,5].map(i=>`<div class="lv-dot" style="background:${i<=lv?col:'#d3d1c7'}"></div>`).join('');
+  if(qChart)renderQ();
+}
+
+function getQ(p,si){if(p>=3&&si<9)return'qw';if(p>=3&&si>=9)return'st';if(p<3&&si<9)return'pt';return'lp'}
+function qLabel(q){return q==='qw'?'Quick Win':q==='st'?'Strategic':q==='pt'?'Potential':'Low Priority'}
+function qColor(q){return q==='qw'?'#639922':q==='st'?'#378ADD':q==='pt'?'#EF9F27':'#888780'}
+
+function aiHint(b,q){
+  const map={
+    qw:{'要約・加工':'ChatGPT / Copilot で議事録・レポート要約を即導入。プロンプトテンプレートを整備し1〜2週間でPoC開始可能。','文章生成':'生成AIでメール下書き・提案書骨子を自動生成。社内文体をFew-shotプロンプトに組み込み品質を担保。','翻訳・多言語対応':'DeepL API または GPT-4o で翻訳ワークフローを自動化。専門用語辞書を整備し高精度を維持。','内容チェック・判定':'RAGで社内規程を検索し、生成AIがOK/NG判定の根拠を提示するPoC設計が有効。','データ検索・特定':'社内ドキュメントをベクトルDB化し、RAGで即時検索できる環境を構築。Microsoft Copilot for M365なら既存環境と親和性が高い。',default:'標準生成AIツールで即導入可能。まずは1〜2週間のPoCを実施し成功体験を積み上げることを推奨。'},
+    st:{default:'RAGアーキテクチャや社内データとの連携が必要。専任チームと予算を確保し3〜6ヶ月のPoC計画を策定することを推奨。'},
+    pt:{default:'現時点では技術・データの成熟度が課題。6〜12ヶ月後に再評価するタイミングを設定し、データ蓄積を先行して進める。'},
+    lp:{default:'AI化よりも業務プロセス見直し（BPR）や既存システム改修で対応することを推奨。'}
+  };
+  const qs=map[q]||{};
+  for(const lb of(b.q1labels||[])){if(qs[lb])return qs[lb]}
+  return qs.default||'';
+}
+
+function renderQ(){
+  const eligible=bizs.filter(b=>b.fit!=='low');
+  const ctx=document.getElementById('qc').getContext('2d');
+  if(qChart){qChart.destroy();qChart=null}
+  const datasets=eligible.map(b=>{
+    const si=getLv('s',b.sRaw)*getLv('i',b.iRaw),pLv=getLv('p',b.pRaw),q=getQ(pLv,si);
+    return{label:b.name,data:[{x:si,y:pLv}],backgroundColor:qColor(q)+'CC',borderColor:qColor(q),borderWidth:2,pointRadius:10,pointHoverRadius:13};
+  });
+  qChart=new Chart(ctx,{
+    type:'bubble',data:{datasets},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:40,right:40,bottom:30,left:20}},
+      scales:{
+        x:{min:0,max:28,title:{display:true,text:'実現難易度 (S×I)',color:'#888780',font:{size:12}},grid:{color:'rgba(136,135,128,0.15)'},ticks:{color:'#888780',font:{size:11}}},
+        y:{min:0,max:6,title:{display:true,text:'ビジネスインパクト (P)',color:'#888780',font:{size:12}},grid:{color:'rgba(136,135,128,0.15)'},ticks:{stepSize:1,color:'#888780',font:{size:11}}}
+      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const b=eligible[ctx.datasetIndex];const si=getLv('s',b.sRaw)*getLv('i',b.iRaw);const q=getQ(getLv('p',b.pRaw),si);return[b.name,`分類: ${qLabel(q)}`,`P:Lv.${getLv('p',b.pRaw)} S:Lv.${getLv('s',b.sRaw)} I:Lv.${getLv('i',b.iRaw)}`]}}}}
+    },
+    plugins:[{id:'qbg',beforeDraw(chart){
+      const{ctx,chartArea:{left,right,top,bottom,width,height}}=chart;
+      const xMid=left+width*(9/28),yMid=top+height*(1-3/6);
+      ctx.save();
+      [{x:left,y:top,w:xMid-left,h:yMid-top,col:'rgba(99,153,34,0.07)',lbl:'Quick Win',tc:'#3B6D11'},
+       {x:xMid,y:top,w:right-xMid,h:yMid-top,col:'rgba(55,138,221,0.07)',lbl:'Strategic',tc:'#0C447C'},
+       {x:left,y:yMid,w:xMid-left,h:bottom-yMid,col:'rgba(239,159,39,0.07)',lbl:'Potential',tc:'#854F0B'},
+       {x:xMid,y:yMid,w:right-xMid,h:bottom-yMid,col:'rgba(136,135,128,0.07)',lbl:'Low Priority',tc:'#5F5E5A'}
+      ].forEach(z=>{ctx.fillStyle=z.col;ctx.fillRect(z.x,z.y,z.w,z.h);ctx.fillStyle=z.tc+'CC';ctx.font='500 12px sans-serif';ctx.textAlign='left';ctx.fillText(z.lbl,z.x+8,z.y+16)});
+      ctx.strokeStyle='rgba(136,135,128,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+      ctx.beginPath();ctx.moveTo(xMid,top);ctx.lineTo(xMid,bottom);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(left,yMid);ctx.lineTo(right,yMid);ctx.stroke();
+      ctx.setLineDash([]);
+      eligible.forEach((b,i)=>{const pt=chart.getDatasetMeta(i).data[0];if(!pt)return;const si=getLv('s',b.sRaw)*getLv('i',b.iRaw);ctx.fillStyle=qColor(getQ(getLv('p',b.pRaw),si));ctx.font='12px sans-serif';ctx.textAlign='center';const name=b.name.length>8?b.name.slice(0,8)+'…':b.name;ctx.fillText(name,pt.x,pt.y-14)});
+      ctx.restore();
+    }}]
+  });
+  renderTable(eligible);
+}
+
+function renderTable(eligible){
+  const tbody=document.getElementById('rtbody');
+  const actions={qw:'標準ツールで即導入・PoC開始',st:'予算確保・専任チーム編成',pt:'技術進化・データ蓄積後に再評価',lp:'現行維持・AI化見送り'};
+  const tagCls={qw:'tqw',st:'tst',pt:'tpt',lp:'tlp'};
+  tbody.innerHTML=eligible.map(b=>{
+    const si=getLv('s',b.sRaw)*getLv('i',b.iRaw),q=getQ(getLv('p',b.pRaw),si),hint=aiHint(b,q);
+    return`<tr><td style="font-weight:500">${esc(b.name)}</td><td>${esc(b.dept)||'—'}</td><td><span class="sbadge ${fitBadge(b.fit)}">${fitLabel(b.fit)}</span></td><td style="text-align:center">Lv.${getLv('p',b.pRaw)}</td><td style="text-align:center">Lv.${getLv('s',b.sRaw)}</td><td style="text-align:center">Lv.${getLv('i',b.iRaw)}</td><td><span class="qtag ${tagCls[q]}">${qLabel(q)}</span><div style="font-size:11px;color:#5f5e5a;margin-top:3px">${actions[q]}</div></td><td><div class="ai-hint">${hint}</div></td></tr>`;
+  }).join('');
+}
+
+function swTab(t){
+  document.getElementById('tb-c').classList.toggle('act',t==='chart');
+  document.getElementById('tb-t').classList.toggle('act',t==='table');
+  document.getElementById('pane-chart').style.display=t==='chart'?'':'none';
+  document.getElementById('pane-table').style.display=t==='table'?'':'none';
+}
+
+function handleDrop(e){e.preventDefault();document.getElementById('dropzone').classList.remove('drag');const f=e.dataTransfer.files[0];if(f)handleFile(f)}
+function handleFile(file){
+  if(!file)return;
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='csv'){const r=new FileReader();r.onload=e=>parseCSV(e.target.result);r.readAsText(file,'UTF-8')}
+  else if(ext==='xlsx'||ext==='xls'){const r=new FileReader();r.onload=e=>{const wb=XLSX.read(e.target.result,{type:'binary'});const ws=wb.Sheets[wb.SheetNames[0]];parseCSV(XLSX.utils.sheet_to_csv(ws))};r.readAsBinaryString(file)}
+  else{showIR('error','対応していないファイル形式です（.xlsx / .csv のみ）')}
+}
+function parseCSV(text){
+  const lines=text.trim().split('\n').filter(l=>l.trim());
+  if(lines.length<2){showIR('error','データが見つかりません');return}
+  let added=0,skipped=0;
+  for(let i=1;i<lines.length;i++){
+    const cols=lines[i].split(',').map(c=>c.trim().replace(/^"|"$/g,''));
+    if(cols.length<4)continue;
+    const name=cols[0],dept=cols[1],q1mx=parseInt(cols[2])||0,q2sm=parseInt(cols[3])||0;
+    if(!name||!q1mx||!q2sm){skipped++;continue}
+    const score=q1mx*q2sm,fit=calcFit(q1mx,q2sm);
+    bizs.push({id:Date.now()+i,name,dept,desc:'',q1mx,q2sm,q1labels:[],q2labels:[],score,fit,pRaw:40,sRaw:5,iRaw:5});
+    added++;
+  }
+  renderList();
+  if(added>0)showIR('ok',`${added}件の業務を登録しました${skipped>0?`（${skipped}件スキップ）`:''}。業務名をクリックすると詳細を確認・編集できます。`);
+  else showIR('error','登録できる業務がありませんでした。列の形式を確認してください。');
+}
+function showIR(type,msg){
+  const el=document.getElementById('import-result');
+  el.style.display='block';
+  el.style.background=type==='ok'?'#EAF3DE':'#FCEBEB';
+  el.style.color=type==='ok'?'#27500A':'#791F1F';
+  el.style.borderColor=type==='ok'?'#C0DD97':'#F7C1C1';
+  el.textContent=msg;
+}
+function downloadTemplate(){
+  const csv='業務名,部門,Q1スコア,Q2スコア合計\n議事録要約,総務部,4,6\nメール下書き生成,営業部,4,3\n規程チェック,法務部,3,5\n';
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ai_usecase_template.csv';a.click();
+}
+</script>
+</body>
+</html>
