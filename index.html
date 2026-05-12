@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI活用業務 優先順位化ツール</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <div class="app-title">AI活用業務 優先順位化ツール</div>
+  <p class="app-sub">PSIフレームワーク — ユースケース特定・優先順位付け</p>
+
+  <!-- ===== Progress Bar ===== -->
+  <div class="progress-bar">
+    <div class="ps active" onclick="gS(0)">Step 1<span class="ps-step">業務洗い出し</span></div>
+    <div class="ps"        onclick="gS(1)">Step 2<span class="ps-step">PSI評価</span></div>
+    <div class="ps"        onclick="gS(2)">Step 3<span class="ps-step">4象限分析</span></div>
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- STEP 1                                                -->
+  <!-- ===================================================== -->
+  <div class="sec vis" id="s0">
+
+    <div class="step-hd"><div class="step-n">1</div><h2>対象業務の洗い出し・スクリーニング</h2></div>
+    <p class="sub">業務を登録します。登録後は各業務を展開して内容の確認・修正ができます。</p>
+
+    <div class="card">
+      <!-- 入力タブ -->
+      <div class="tab-bar" style="margin-bottom:.8rem">
+        <div class="tab act" id="tab-manual" onclick="switchInputTab('manual')">手入力</div>
+        <div class="tab"     id="tab-excel"  onclick="switchInputTab('excel')">Excelアップロード</div>
+      </div>
+
+      <!-- ---- 手入力パネル ---- -->
+      <div id="pane-manual">
+        <div class="row">
+          <div>
+            <label class="fl">業務名<span class="req">*</span></label>
+            <input type="text" id="bn" placeholder="例: 議事録要約・配布">
+          </div>
+          <div>
+            <label class="fl">担当部門</label>
+            <input type="text" id="bd" placeholder="例: 総務部">
+          </div>
+        </div>
+
+        <div class="mt10">
+          <label class="fl">主な作業内容</label>
+          <textarea id="bx" placeholder="例: 会議録音を文字起こしし重要点を抽出してメール配布する"></textarea>
+        </div>
+
+        <div class="divider"></div>
+
+        <label class="fl">
+          Q1. 面倒・嫌だと感じる作業<span class="req">*</span>
+          <span class="hint">（複数可）</span>
+        </label>
+        <div class="cbg" id="q1g">
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="4" data-lb="要約・加工"><label>要約・加工<span class="desc">議事録・報告書から重要点を抽出し定型フォーマットに落とす</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="4" data-lb="文章生成"><label>文章生成<span class="desc">メール回答・報告書・提案書の骨子を毎回作成する</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="4" data-lb="翻訳・多言語対応"><label>翻訳・多言語対応<span class="desc">文書翻訳や文脈調整</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="3" data-lb="内容チェック・判定"><label>内容チェック・判定<span class="desc">申請書が社内ルールや契約に合致しているかOK/NG判断</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="3" data-lb="データ検索・特定"><label>データ検索・特定<span class="desc">膨大なフォルダや過去チャットから知見・ファイルを探す</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="3" data-lb="属人的な相談対応"><label>属人的な相談対応<span class="desc">定型的な質問に経験・記憶を頼りに回答する</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="1" data-lb="情報収集・突き合わせ"><label>情報収集・突き合わせ<span class="desc">複数ファイル・システムを見比べ差分・整合性を確認</span></label></div>
+          <div class="cbi" onclick="tc(this)"><input type="checkbox" value="1" data-lb="単純転記・打ち込み"><label>単純転記・打ち込み<span class="desc">システム間のデータ移し替え作業</span></label></div>
+        </div>
+
+        <div class="mt12">
+          <label class="fl">
+            Q2. インプットに使うデータ<span class="req">*</span>
+            <span class="hint">（複数可）</span>
+          </label>
+          <div class="cbg" id="q2g">
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="3" data-lb="テキスト文書"><label>テキスト文書<span class="desc">メール・チャット履歴・議事録</span></label></div>
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="3" data-lb="非構造化ファイル"><label>非構造化ファイル<span class="desc">PDF規程集・マニュアル・契約書・仕様書</span></label></div>
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="3" data-lb="音声データ"><label>音声データ<span class="desc">会議録音・コールセンター通話記録</span></label></div>
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="2" data-lb="画像・スキャン文書"><label>画像・スキャン文書<span class="desc">現場写真・図面・スキャン帳票</span></label></div>
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="2" data-lb="暗黙知"><label>暗黙知<span class="desc">自分の経験・勘・ベテラン社員へのヒアリング</span></label></div>
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="1" data-lb="構造化データ"><label>構造化データ<span class="desc">DB・Excel・CSV</span></label></div>
+            <div class="cbi" onclick="tc(this)"><input type="checkbox" value="1" data-lb="社外情報"><label>社外情報<span class="desc">ニュース・官公庁統計・競合サイト</span></label></div>
+          </div>
+        </div>
+
+        <!-- スコアプレビュー -->
+        <div id="score-preview" class="score-preview">
+          <div class="sp-row">
+            <span style="font-size:13px;color:var(--text-secondary)">AI適合性スコア（プレビュー）</span>
+            <span class="sp-num"></span>
+          </div>
+          <div class="sp-lbl"></div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:12px">
+          <button class="btn btn-p" onclick="addB()">＋ 業務を追加</button>
+        </div>
+      </div><!-- /pane-manual -->
+
+      <!-- ---- Excelアップロードパネル ---- -->
+      <div id="pane-excel" style="display:none">
+
+        <div
+          class="upload-zone" id="dropzone"
+          onclick="document.getElementById('xlfile').click()"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="handleDrop(event)">
+          <span class="uz-icon">📤</span>
+          <div class="uz-title">Excelファイルをドロップ、またはクリックして選択</div>
+          <p class="uz-sub">.xlsx / .csv 形式対応</p>
+          <input type="file" id="xlfile" accept=".xlsx,.xls,.csv" style="display:none"
+                 onchange="handleFile(this.files[0])">
+        </div>
+
+        <div style="margin-bottom:10px">
+          <span class="tmpl-link" onclick="downloadTemplate()">▼ テンプレートをダウンロード（CSV）</span>
+        </div>
+
+        <div style="padding:12px 14px;background:var(--bg-secondary);border-radius:var(--radius-md);font-size:12px;color:var(--text-secondary);line-height:1.8">
+          <strong style="color:var(--text-primary);display:block;margin-bottom:4px">📋 テンプレートの記入方法</strong>
+          <b style="color:var(--text-primary)">業務名・部門・主な作業内容</b>：自由記述<br>
+          <b style="color:var(--text-primary)">Q1 / Q2 列</b>：該当する項目のセルに <code>○</code>（または <code>1</code>）を入力<br>
+          <b style="color:var(--text-primary)">PSI列（任意）</b>：P＝月間工数h、S＝教育日数、I＝ミス時リカバリーh を数値入力<br>
+          <span style="color:#3B6D11;font-weight:600">※ PSI列を入力するとアップロード後に自動でStep 3の結果が表示されます</span>
+        </div>
+
+        <div id="import-result" class="import-result"></div>
+      </div><!-- /pane-excel -->
+    </div><!-- /card -->
+
+    <!-- 登録済み業務 -->
+    <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;font-weight:600;color:var(--text-secondary)">登録済み業務</span>
+      <span id="bcnt" style="font-size:12px;color:var(--text-secondary)">0件</span>
+    </div>
+    <ul class="blist" id="blist">
+      <li class="empty">まだ業務が登録されていません</li>
+    </ul>
+
+    <div class="acts">
+      <div></div>
+      <button class="btn btn-p" onclick="gS(1)">Step 2へ進む →</button>
+    </div>
+  </div><!-- /s0 -->
+
+  <!-- ===================================================== -->
+  <!-- STEP 2                                                -->
+  <!-- ===================================================== -->
+  <div class="sec" id="s1">
+
+    <div class="step-hd"><div class="step-n">2</div><h2>PSI評価</h2></div>
+    <p class="sub">各業務の P・S・I を数値で入力します。ゲージとドットで現在のレベルをリアルタイム確認できます。</p>
+
+    <div id="psi-con"></div>
+
+    <div class="acts">
+      <button class="btn btn-s" onclick="gS(0)">← 戻る</button>
+      <button class="btn btn-p" onclick="gS(2)">Step 3へ進む →</button>
+    </div>
+  </div><!-- /s1 -->
+
+  <!-- ===================================================== -->
+  <!-- STEP 3                                                -->
+  <!-- ===================================================== -->
+  <div class="sec" id="s2">
+
+    <div class="step-hd"><div class="step-n">3</div><h2>4象限分析・優先順位の決定</h2></div>
+    <p class="sub">縦軸＝Pスコア（ビジネスインパクト）、横軸＝S×I（実現難易度）で各業務をマッピングします。</p>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0">
+      <div class="tab-bar" style="margin-bottom:0;flex:1;border-bottom:none">
+        <div class="tab act" id="tb-c" onclick="swTab('chart')">4象限マップ</div>
+        <div class="tab"     id="tb-t" onclick="swTab('table')">結果一覧</div>
+      </div>
+      <button class="btn-pdf" onclick="exportPDF()" style="margin-left:12px;white-space:nowrap">📄 PDFで出力</button>
+    </div>
+    <div style="border-bottom:0.5px solid var(--border-light);margin-bottom:1.5rem"></div>
+
+    <!-- チャート -->
+    <div id="pane-chart">
+      <div class="q-wrap">
+        <canvas id="qc" role="img" aria-label="AI業務優先順位 4象限マップ"></canvas>
+      </div>
+      <div class="legend-row">
+        <span class="legend-item" style="color:#3B6D11"><span class="legend-dot" style="background:#EAF3DE;border:1.5px solid #639922"></span>Quick Win</span>
+        <span class="legend-item" style="color:#185FA5"><span class="legend-dot" style="background:#E6F1FB;border:1.5px solid #378ADD"></span>Strategic</span>
+        <span class="legend-item" style="color:#854F0B"><span class="legend-dot" style="background:#FAEEDA;border:1.5px solid #EF9F27"></span>Potential</span>
+        <span class="legend-item" style="color:#5F5E5A"><span class="legend-dot" style="background:#F1EFE8;border:1.5px solid #B4B2A9"></span>Low Priority</span>
+      </div>
+    </div>
+
+    <!-- テーブル -->
+    <div id="pane-table" style="display:none" class="result-wrap">
+      <table class="rtbl">
+        <thead>
+          <tr>
+            <th style="width:14%">業務名</th>
+            <th style="width:9%">部門</th>
+            <th style="width:8%">適合性</th>
+            <th style="width:5%;text-align:center">P</th>
+            <th style="width:5%;text-align:center">S</th>
+            <th style="width:5%;text-align:center">I</th>
+            <th style="width:12%">分類</th>
+            <th style="width:42%">AI活用の可能性</th>
+          </tr>
+        </thead>
+        <tbody id="rtbody"></tbody>
+      </table>
+    </div>
+
+    <!-- 象限説明カード -->
+    <div class="q-legend-grid">
+      <div class="q-legend-card" style="border-left:3px solid #639922">
+        <div class="q-lbl" style="color:#3B6D11">⚡ Quick Win（左上）</div>
+        <div class="q-desc">標準ツールで即導入し成功体験を積み上げる</div>
+      </div>
+      <div class="q-legend-card" style="border-left:3px solid #378ADD">
+        <div class="q-lbl" style="color:#185FA5">🎯 Strategic（右上）</div>
+        <div class="q-desc">予算・リソースを集中投下し独自の知能資産を築く</div>
+      </div>
+      <div class="q-legend-card" style="border-left:3px solid #EF9F27">
+        <div class="q-lbl" style="color:#854F0B">🌱 Potential（左下）</div>
+        <div class="q-desc">技術進化やデータ蓄積を待ってから判断する</div>
+      </div>
+      <div class="q-legend-card" style="border-left:3px solid #B4B2A9">
+        <div class="q-lbl" style="color:#5F5E5A">⛔ Low Priority（右下）</div>
+        <div class="q-desc">無理にAIを当てはめず現行通りとする</div>
+      </div>
+    </div>
+
+    <div class="acts">
+      <button class="btn btn-s" onclick="gS(1)">← 戻る</button>
+    </div>
+  </div><!-- /s2 -->
+
+</div><!-- /app -->
+
+<!-- PDF生成中オーバーレイ -->
+<div class="pdf-overlay" id="pdf-overlay">
+  <div class="pdf-spinner"></div>
+  <span>PDF を生成中...</span>
+</div>
+
+<!-- External libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- App logic -->
+<script src="main.js"></script>
+</body>
+</html>
